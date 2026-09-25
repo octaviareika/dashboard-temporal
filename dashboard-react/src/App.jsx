@@ -10,13 +10,37 @@ let DefaultIcon = L.icon({
     iconUrl: markerIcon,
     shadowUrl: markerShadow,
     iconSize: [25, 41],
-    iconAnchor: [12, 41]
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
 function MeuMapa() {
  
-  const posicaoInicial = [-23.55052, -46.633308]; // coordenadas de sao paulo
+
+    async function buscarNomeDaCidade(lat, long){
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${long}`,
+          {
+            headers: {
+              'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+            },
+          }
+        )
+        const data  = await response.json();
+        if (data && data.address){
+          const cidade = data.address.city || data.address.town || data.address.village || '';
+          const estado = data.address.state || '';
+          return `${cidade}, ${estado}`;
+        }
+        return null;
+      } catch (error){
+        console.error("Erro ao buscar o nome da cidade", error);
+        return null;
+      }
+    }
+
 
   return (
     <MapContainer

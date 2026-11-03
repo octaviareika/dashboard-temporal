@@ -7,4 +7,16 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
+  server: {
+    host: '127.0.0.1',
+    proxy: {
+      '/api-ana': {
+        target: 'https://www.ana.gov.br/hidrowebservice',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-ana/, ''),
+        secure: false,
+      },
+    },
+  },
 })
+

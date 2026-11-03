@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
-import CasosSemanaisChart from './components/CasosSemanaisChart';
+import PrecipitacaoRecenteChart from './components/PrecipitacaoRecenteChart';
 
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -76,20 +76,20 @@ function MapViewController({ center }) {
 
 function App() { 
   const [posicao, setPosicao] = useState([-19.9167, -43.9345]); // Centro em Belo Horizonte, MG por padrão
-  const [nomeCidade, setNomeCidade] = useState("Buscando...");
+  const [nomeCidade, setNomeCidade] = useState("Belo Horizonte, MG");
   const [sensor, setSensor] = useState('todos');
   const [sensorSelecionado, setSensorSelecionado] = useState(null);
 
   const sensoresFiltrados = SENSORES_MOCK.filter(
-    sensor => sensor === 'todos' || sensor.tipo === sensor
+    s => sensor === 'todos' || s.tipo === sensor
   );
 
-  const atualizarPosicao = async (lat, long) => {
+  const atualizarPosicao = useCallback(async (lat, long) => {
     setPosicao([lat, long]);
     setNomeCidade("Buscando cidade...");
     const cidade = await buscarNomeDaCidade(lat, long);
     setNomeCidade(cidade || "Belo Horizonte, MG");
-  };
+  }, []);
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -100,13 +100,10 @@ function App() {
         },
         (error) => {
           console.warn('Geolocalização não permitida/disponível:', error);
-          atualizarPosicao(-19.9167, -43.9345);
         }
       );
-    } else {
-      atualizarPosicao(-19.9167, -43.9345);
     }
-  }, []);
+  }, [atualizarPosicao]);
 
   const handleMapClick = (lat, long) => {
     atualizarPosicao(lat, long);
@@ -125,8 +122,10 @@ function App() {
               <h2>Mapa de Alertas de Dengue na Última Semana</h2>
               <div className="city-badge">
                 Cidade selecionada: <strong>{nomeCidade}</strong>
+                {sensorSelecionado && <span> • {sensorSelecionado.nome}</span>}
               </div>
             </div> 
+ 
 
             <div>
               <label htmlFor="tipo-sensor-select" className="filter-label">
@@ -176,13 +175,15 @@ function App() {
             </div>
           </div>
 
-          {/* Componente do Gráfico (Abaixo do Mapa) */}
-          <CasosSemanaisChart />
+          {/* Gráfico de Linha de Precipitação (Dados Recentes ANA - Opção A) */}
+          <PrecipitacaoRecenteChart />
+
         </section>
       </main>
     </div>
   );
 }
+
 
 export default App;
 
